@@ -42,6 +42,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close(code=4001)
             return
         msg_type = data.get("type", "text")
+        if msg_type not in {"text", "image", "voice", "file"}:
+            await self.close(code=4002)
+            return
 
         # Save message to database
         msg = await self.save_message(self.room_id, self.user.id, message, msg_type)
