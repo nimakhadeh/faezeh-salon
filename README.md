@@ -1,306 +1,150 @@
-<div align="center">
+# Faezeh Salon
 
-# FAEZEH SALON
+## Salon Management & Booking Platform
 
-### Enterprise Salon Management Platform
+Faezeh Salon is a full-stack business platform built to digitize appointment booking, customer management, payments, notifications and real-time communication for a hair-braiding and extension business.
 
-<p align="center">
-A Modern Full-Stack Platform for Hair Braiding & Extension Businesses
-</p>
+## What the System Does
 
-<br>
+- Customer registration and authentication
+- JWT-based API authentication
+- OTP password recovery
+- Specialist management
+- Service and pricing management
+- Appointment booking and availability checks
+- Deposit-based reservation flow
+- Zarinpal payment integration
+- Wallet and transaction management
+- Loyalty and CRM features
+- SMS and Telegram notifications
+- Real-time customer/specialist chat
+- Background jobs with Celery
+- PostgreSQL and Redis
+- Docker-based deployment
 
-<img src="https://img.shields.io/badge/Django-5.0-092E20?style=for-the-badge&logo=django&logoColor=white"/>
-<img src="https://img.shields.io/badge/Next.js-14-000000?style=for-the-badge&logo=nextdotjs&logoColor=white"/>
-<img src="https://img.shields.io/badge/PostgreSQL-16-316192?style=for-the-badge&logo=postgresql&logoColor=white"/>
-<img src="https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white"/>
-<img src="https://img.shields.io/badge/Celery-5-37814A?style=for-the-badge&logo=celery&logoColor=white"/>
-<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"/>
-
-<br><br>
-
-### Designed & Engineered by
-
-# NIEMA KHADEH
-
-*Full Stack Software Engineer*
-
-</div>
-
----
-
-## Executive Summary
-
-FAEZEH SALON is a production-ready enterprise platform developed to digitize and automate salon operations.
-
-The platform combines appointment scheduling, online payments, customer relationship management, loyalty programs, SMS automation, real-time communication, business intelligence, and customer engagement tools into a unified ecosystem.
-
-Built with scalability, maintainability, and modern software architecture principles in mind, the system demonstrates advanced backend engineering, real-time communication, distributed task processing, and containerized deployment.
-
----
-
-## Core Business Capabilities
-
-### Appointment Management
-
-* Dynamic scheduling engine
-* Real-time availability calculation
-* Specialist calendar management
-* Deposit-based reservation workflow
-* Automated reminders and follow-ups
-
-### Customer Relationship Management
-
-* Centralized customer profiles
-* Customer lifecycle tracking
-* Interaction history
-* Targeted communication campaigns
-* Retention management
-
-### Payment Infrastructure
-
-* Zarinpal payment gateway integration
-* Wallet-based transactions
-* Deposit payments
-* Purchase payments
-* Transaction auditing
-
-### Loyalty & Rewards
-
-* Point accumulation system
-* Reward conversion engine
-* Custom loyalty rules
-* Customer engagement metrics
-
-### Communication Layer
-
-* Real-time WebSocket messaging
-* Telegram bot integration
-* SMS automation
-* Event-driven notifications
-
-### Administrative Operations
-
-* Business analytics dashboard
-* Customer management
-* Service management
-* Transaction monitoring
-* Content moderation
-
----
-
-## System Architecture
+## Architecture
 
 ```text
-┌──────────────────────────────────────┐
-│              Next.js 14              │
-│         Frontend Application         │
-└──────────────────┬───────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────┐
-│          Django REST Framework       │
-│             API Layer                │
-└───────┬──────────┬───────────┬────────┘
-        │          │           │
-        ▼          ▼           ▼
-
- PostgreSQL      Redis     Channels
- Database        Cache     WebSocket
-
-                    │
-                    ▼
-
-                 Celery
-           Async Task Queue
-
-                    │
-                    ▼
-
-       SMS • Telegram • Payments
+Next.js 14
+    │
+    ▼
+Django REST Framework
+    │
+    ├── PostgreSQL
+    ├── Redis
+    ├── Django Channels
+    └── Celery
+          │
+          ├── Kavenegar
+          ├── Telegram
+          └── Zarinpal
 ```
 
----
-
-## Technology Stack
+## Tech Stack
 
 ### Backend
-
-* Django 5
-* Django REST Framework
-* Django Channels
-* Celery
-* Redis
-* PostgreSQL
+- Python
+- Django
+- Django REST Framework
+- Django Channels
+- Simple JWT
+- Celery
+- Redis
+- PostgreSQL
 
 ### Frontend
-
-* Next.js 14
-* TypeScript
-* React
-* Tailwind CSS
+- Next.js 14
+- React
+- TypeScript
+- Tailwind CSS
 
 ### Infrastructure
-
-* Docker
-* Docker Compose
-* Nginx
-* Daphne ASGI
+- Docker / Docker Compose
+- Nginx
+- Daphne / ASGI
 
 ### Integrations
+- Zarinpal
+- Kavenegar
+- Telegram Bot API
+- Cloudinary
 
-* Zarinpal
-* Kavenegar
-* Telegram Bot API
+## Backend Engineering Highlights
 
----
+### Authentication
+- JWT access/refresh authentication
+- Refresh-token rotation and blacklist support
+- Password validation
+- OTP password reset
+- Rate limiting for sensitive authentication endpoints
+- Role-based access control
+- Protection against public role escalation
 
-## Engineering Highlights
+### Appointment Workflow
+Appointment state transitions are controlled by user role and current appointment state.
 
-### Authentication & Authorization
+The booking layer checks specialist availability and prevents overlapping confirmed or deposit-paid appointments at the application level.
 
-* JWT Authentication
-* Refresh Token Rotation
-* OTP Password Recovery
-* Role-Based Access Control
+### Payment Handling
+Payment callbacks use transactional locking and idempotent success handling so repeated callbacks do not repeat business side effects.
 
-### Real-Time Systems
-
-* WebSocket Architecture
-* Live Chat Messaging
-* Instant Notifications
-
-### Distributed Processing
-
-* Celery Workers
-* Scheduled Tasks
-* Background Processing
-* Queue Management
-
-### Scalability
-
-* Service-Oriented Structure
-* Modular Django Apps
-* Containerized Deployment
-* Redis-Based Caching
-
----
+### Asynchronous Processing
+Celery handles operations such as SMS delivery, scheduled jobs and notification workflows.
 
 ## Project Structure
 
 ```text
 backend/
- ├── accounts
- ├── services
- ├── appointments
- ├── payments
- ├── wallet
- ├── loyalty
- ├── gallery
- ├── chat
- ├── survey
- ├── crm
- └── telegram_bot
+├── apps/
+│   ├── accounts/
+│   ├── appointments/
+│   ├── services/
+│   ├── payments/
+│   ├── wallet/
+│   ├── loyalty/
+│   ├── gallery/
+│   ├── chat/
+│   ├── survey/
+│   └── crm/
+├── config/
+└── manage.py
 
 frontend/
- ├── app
- ├── components
- ├── lib
- └── public
-
-docker/
- └── nginx
+└── Next.js application
 ```
 
----
+## Local Development
 
-## Deployment
+Backend dependencies are defined in `backend/requirements.txt`.
+
+Typical Django commands:
 
 ```bash
-git clone https://github.com/your-username/faezeh-salon
-
-cd faezeh-salon
-
-cp .env.example .env
-
-docker compose up -d --build
+python manage.py migrate
+python manage.py test
+python manage.py runserver
 ```
 
----
+For the full stack, use the project's Docker Compose configuration.
 
-## Production Features
+## Portfolio Focus
 
-✔ JWT Authentication
+This project demonstrates practical experience with:
 
-✔ Appointment Scheduling Engine
-
-✔ Online Payments
-
-✔ Wallet System
-
-✔ Loyalty Program
-
-✔ CRM
-
-✔ Real-Time Chat
-
-✔ SMS Automation
-
-✔ Telegram Integration
-
-✔ Customer Surveys
-
-✔ Dockerized Infrastructure
-
-✔ PostgreSQL Persistence
-
-✔ Redis Caching
-
-✔ Celery Background Tasks
-
----
-
-## Software Engineering Goals
-
-This project was built to demonstrate:
-
-* Enterprise Software Architecture
-* Backend System Design
-* API Development
-* Real-Time Communication
-* Payment Gateway Integration
-* Asynchronous Processing
-* Docker-Based Deployment
-* Modern Full Stack Development
-
----
+- REST API design
+- Django application architecture
+- authentication and authorization
+- database-backed business workflows
+- payment gateway integration
+- WebSocket communication
+- asynchronous task processing
+- Dockerized deployment
+- security hardening and regression testing
 
 ## Developer
 
-### NIEMA KHADEH
+**Nima Khadeh**
 
-Full Stack Software Engineer
+Backend-focused Software Developer
 
-Specializing in:
-
-* Python & Django
-* Next.js & React
-* PostgreSQL
-* Redis
-* Docker
-* System Design
-* API Architecture
-* Real-Time Applications
-
----
-
-<div align="center">
-
-### "Building scalable software that solves real business problems."
-
-<br>
-
-© 2026 NIEMA KHADEH
-
-</div>
-
+**Python · Django · DRF · PostgreSQL · Redis · Celery · Docker · REST APIs**
