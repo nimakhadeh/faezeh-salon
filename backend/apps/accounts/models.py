@@ -92,4 +92,4 @@ class PasswordResetOTP(models.Model):
         verbose_name_plural = "کدهای بازنشانی رمز"
 
     def __str__(self):
-        return f"{self.phone} - {self.code}"
+        return f"{self.phone} - OTP"
