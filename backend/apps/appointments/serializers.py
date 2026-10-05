@@ -29,7 +29,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "notes", "can_cancel", "is_upcoming",
             "created_at", "updated_at",
         ]
-        read_only_fields = ["status", "deposit_amount", "total_price", "final_price"]
+        read_only_fields = [
+            "customer", "specialist", "service", "status",
+            "deposit_amount", "total_price", "final_price",
+        ]
 
 
 class AppointmentCreateSerializer(serializers.ModelSerializer):

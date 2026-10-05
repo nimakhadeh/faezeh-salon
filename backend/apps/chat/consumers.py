@@ -31,9 +31,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        message = data.get("message", "")
+        try:
+            data = json.loads(text_data)
+        except json.JSONDecodeError:
+            await self.close(code=4000)
+            return
+
+        message = str(data.get("message", "")).strip()
+        if not message or len(message) > 5000:
+            await self.close(code=4001)
+            return
         msg_type = data.get("type", "text")
+        if msg_type not in {"text", "image", "voice", "file"}:
+            await self.close(code=4002)
+            return
 
         # Save message to database
         msg = await self.save_message(self.room_id, self.user.id, message, msg_type)
@@ -66,7 +77,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def is_room_member(self, room_id, user_id):
         from .models import ChatRoom
         try:
-            room = ChatRoom.objects.get(id=room_id)
+            room = ChatRoom.objects.get(id=room_id, is_active=True)
             return room.customer_id == user_id or room.specialist_id == user_id
         except ChatRoom.DoesNotExist:
             return False
@@ -74,7 +85,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, room_id, user_id, content, msg_type):
         from .models import ChatRoom, ChatMessage
-        room = ChatRoom.objects.get(id=room_id)
+        room = ChatRoom.objects.get(id=room_id, is_active=True)
+        if room.customer_id != user_id and room.specialist_id != user_id:
+            raise PermissionError("User is not a member of this chat room.")
         return ChatMessage.objects.create(
             room=room,
             sender_id=user_id,

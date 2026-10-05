@@ -57,7 +57,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["phone", "username", "first_name", "last_name", "password", "password2", "role"]
+        fields = ["phone", "username", "first_name", "last_name", "password", "password2"]
         extra_kwargs = {
             "first_name": {"required": True},
             "last_name": {"required": True},
@@ -108,4 +108,4 @@ class RequestOTPSerializer(serializers.Serializer):
 class VerifyOTPSerializer(serializers.Serializer):
     phone = serializers.CharField(required=True, max_length=11)
     code = serializers.CharField(required=True, max_length=6)
-    new_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, validators=[validate_password])

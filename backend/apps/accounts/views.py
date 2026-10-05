@@ -5,12 +5,13 @@ Accounts Views - Auth, Profile, Password Management
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django_ratelimit.decorators import ratelimit
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from datetime import timedelta
-import random
+import secrets
 
 from .serializers import (
     UserSerializer, SpecialistSerializer, RegisterSerializer,
@@ -78,21 +79,22 @@ class ChangePasswordView(APIView):
 class RequestOTPView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @ratelimit(key="ip", rate="5/h", method="POST", block=True)
     def post(self, request):
         serializer = RequestOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         phone = serializer.validated_data["phone"]
 
-        try:
-            user = User.objects.get(phone=phone)
-        except User.DoesNotExist:
-            return Response({"phone": "این شماره موبایل ثبت نشده است."}, status=status.HTTP_404_NOT_FOUND)
+        user = User.objects.filter(phone=phone).first()
+        if user is None:
+            # Do not reveal whether a phone number is registered.
+            return Response({"message": "اگر این شماره ثبت شده باشد، کد تأیید ارسال خواهد شد."})
 
         # Delete old OTPs
         PasswordResetOTP.objects.filter(phone=phone, is_used=False).delete()
 
         # Generate 6-digit code
-        code = str(random.randint(100000, 999999))
+        code = str(secrets.randbelow(900000) + 100000)
         PasswordResetOTP.objects.create(phone=phone, code=code)
 
         # Send SMS via Kavenegar
@@ -107,6 +109,7 @@ class RequestOTPView(APIView):
 class VerifyOTPView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @ratelimit(key="ip", rate="10/h", method="POST", block=True)
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -123,10 +126,9 @@ class VerifyOTPView(APIView):
         except PasswordResetOTP.DoesNotExist:
             return Response({"code": "کد نامعتبر یا منقضی شده است."}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            user = User.objects.get(phone=phone)
-        except User.DoesNotExist:
-            return Response({"phone": "کاربر یافت نشد."}, status=status.HTTP_404_NOT_FOUND)
+        user = User.objects.filter(phone=phone).first()
+        if user is None:
+            return Response({"code": "کد نامعتبر یا منقضی شده است."}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(serializer.validated_data["new_password"])
         user.save()
