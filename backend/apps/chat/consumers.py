@@ -31,8 +31,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        message = data.get("message", "")
+        try:
+            data = json.loads(text_data)
+        except json.JSONDecodeError:
+            await self.close(code=4000)
+            return
+
+        message = str(data.get("message", "")).strip()
+        if not message or len(message) > 5000:
+            await self.close(code=4001)
+            return
         msg_type = data.get("type", "text")
 
         # Save message to database
