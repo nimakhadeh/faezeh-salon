@@ -66,7 +66,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def is_room_member(self, room_id, user_id):
         from .models import ChatRoom
         try:
-            room = ChatRoom.objects.get(id=room_id)
+            room = ChatRoom.objects.get(id=room_id, is_active=True)
             return room.customer_id == user_id or room.specialist_id == user_id
         except ChatRoom.DoesNotExist:
             return False
