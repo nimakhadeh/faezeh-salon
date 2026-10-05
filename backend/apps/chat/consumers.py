@@ -74,7 +74,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, room_id, user_id, content, msg_type):
         from .models import ChatRoom, ChatMessage
-        room = ChatRoom.objects.get(id=room_id)
+        room = ChatRoom.objects.get(id=room_id, is_active=True)
+        if room.customer_id != user_id and room.specialist_id != user_id:
+            raise PermissionError("User is not a member of this chat room.")
         return ChatMessage.objects.create(
             room=room,
             sender_id=user_id,
