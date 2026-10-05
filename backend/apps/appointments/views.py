@@ -111,7 +111,7 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
             result = zarinpal.request_payment(
                 amount=appointment.deposit_amount,
                 description=f"بیعانه نوبت {appointment.service.name}",
-                callback_url=f"{request.build_absolute_uri('/api/payments/verify/')}",
+                callback_url=self.request.build_absolute_uri("/api/payments/verify/"),
                 metadata={"appointment_id": appointment.id, "transaction_id": transaction.id},
             )
             if result.get("success"):
@@ -180,6 +180,26 @@ class AppointmentStatusUpdateView(APIView):
         new_status = request.data.get("status")
         if new_status not in dict(Appointment.STATUS_CHOICES):
             return Response({"error": "وضعیت نامعتبر."}, status=400)
+
+        allowed_statuses = {
+            "admin": {"pending", "deposit_paid", "confirmed", "completed", "canceled", "no_show"},
+            "specialist": {"confirmed", "completed", "canceled", "no_show"},
+            "customer": {"canceled"},
+        }
+        current_status = appointment.status
+        if new_status not in allowed_statuses.get(user.role, set()):
+            return Response({"error": "شما اجازه تغییر این وضعیت را ندارید."}, status=403)
+
+        valid_transitions = {
+            "pending": {"deposit_paid", "canceled"},
+            "deposit_paid": {"confirmed", "canceled"},
+            "confirmed": {"completed", "canceled", "no_show"},
+            "completed": set(),
+            "canceled": set(),
+            "no_show": set(),
+        }
+        if new_status != current_status and new_status not in valid_transitions[current_status]:
+            return Response({"error": "تغییر وضعیت از وضعیت فعلی مجاز نیست."}, status=400)
 
         appointment.status = new_status
         appointment.save()
