@@ -98,12 +98,22 @@ class PaymentVerifyView(APIView):
 
         if result["success"]:
             with db_transaction.atomic():
+                tx = Transaction.objects.select_for_update().get(pk=tx.pk)
+
+                # A repeated gateway callback must not repeat wallet/deposit side effects.
+                if tx.status == "success":
+                    return Response({
+                        "success": True,
+                        "message": "Payment already verified.",
+                        "ref_id": tx.ref_id,
+                        "transaction": TransactionSerializer(tx).data,
+                    })
+
                 tx.status = "success"
                 tx.ref_id = result.get("ref_id", "")
-                tx.card_pan = result.get("card_pan", "")
-                tx.save()
+                tx.card_pan = ""
+                tx.save(update_fields=["status", "ref_id", "card_pan", "updated_at"])
 
-                # Handle based on transaction type
                 self._handle_successful_payment(tx)
 
             return Response({
