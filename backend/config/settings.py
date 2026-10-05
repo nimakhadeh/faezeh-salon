@@ -19,7 +19,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-insecure-change-me")
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
-CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:3000").split(",")
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:3000").split(",")
+    if origin.strip()
+]
 
 # =============================================================================
 # Application Definition
@@ -210,9 +214,12 @@ SIMPLE_JWT = {
 # =============================================================================
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost",
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost",
+    ).split(",")
+    if origin.strip()
 ]
 
 CORS_ALLOW_CREDENTIALS = True
